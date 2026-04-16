@@ -2,63 +2,53 @@ package snapshot
 
 import "github.com/user/portwatch/internal/scanner"
 
-// ChangeType describes what kind of change occurred on a port.
-type ChangeType string
-
-const (
-	ChangeOpened ChangeType = "opened"
-	ChangeClosed ChangeType = "closed"
-)
-
-// Change represents a detected difference between two snapshots.
-type Change struct {
-	Port   int        `json:"port"`
-	Change ChangeType `json:"change"`
+// DiffResult holds the sets of ports that were opened or closed
+// between two snapshots.
+type DiffResult struct {
+	Opened []int
+	Closed []int
 }
 
-// Diff compares two snapshots and returns a list of changes.
-// prev may be nil (first run), in which case all open ports are reported as opened.
-func Diff(prev, curr *Snapshot) []Change {
-	var changes []Change
+// Diff compares prev and next scan results and returns the ports
+// that were opened (present in next but not prev) and closed
+// (present in prev but not next).
+func Diff(prev, next []scanner.Result) DiffResult {
+	prevSet := toPortSet(prev)
+	nextSet := toPortSet(next)
 
-	prevOpen := toPortSet(prev)
-	currOpen := toPortSet(curr)
+	var opened, closed []int
 
-	for port := range currOpen {
-		if !prevOpen[port] {
-			changes = append(changes, Change{Port: port, Change: ChangeOpened})
+	for p := range nextSet {
+		if !prevSet[p] {
+			opened = append(opened, p)
+		}
+	}
+	for p := range prevSet {
+		if !nextSet[p] {
+			closed = append(closed, p)
 		}
 	}
 
-	for port := range prevOpen {
-		if !currOpen[port] {
-			changes = append(changes, Change{Port: port, Change: ChangeClosed})
-		}
-	}
-
-	return changes
+	return DiffResult{Opened: opened, Closed: closed}
 }
 
-func toPortSet(snap *Snapshot) map[int]struct{} {
-	set := make(map[int]struct{})
-	if snap == nil {
-		return set
-	}
-	for _, r := range snap.Results {
+func toPortSet(results []scanner.Result) map[int]bool {
+	s := make(map[int]bool, len(results))
+	for _, r := range results {
 		if r.Open {
-			set[r.Port] = struct{}{}
+			s[r.Port] = true
 		}
 	}
-	return set
+	return s
 }
 
-// OpenPorts returns only the open ScanResults from a snapshot.
-func OpenPorts(snap *Snapshot) []scanner.ScanResult {
-	var open []scanner.ScanResult
-	for _, r := range snap.Results {
+// OpenPorts returns only the open ports from a slice of Results.
+func OpenPorts(results []scanner.Result) []int {
+	var ports []int
+	for _, r := range results {
 		if r.Open {
-			open = append(open, r)
+			ports = append(ports, r.Port)
 		}
 	}
-	return open
+	return ports
 }
