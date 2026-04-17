@@ -20,6 +20,17 @@ type ScanResult struct {
 	Ports     []PortState
 }
 
+// OpenPorts returns only the ports that were found to be open.
+func (r *ScanResult) OpenPorts() []PortState {
+	var open []PortState
+	for _, p := range r.Ports {
+		if p.Open {
+			open = append(open, p)
+		}
+	}
+	return open
+}
+
 // Scanner scans ports on a given host.
 type Scanner struct {
 	Timeout time.Duration
