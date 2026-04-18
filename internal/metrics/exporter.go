@@ -28,18 +28,22 @@ func NewExporter(m *Metrics) *Exporter {
 	return &Exporter{m: m}
 }
 
-// Export serialises the current metrics state as JSON into w.
-func (e *Exporter) Export(w io.Writer) error {
+// snapshot captures the current metrics state under the lock.
+func (e *Exporter) snapshot() Snapshot {
 	e.m.mu.Lock()
-	snap := Snapshot{
+	defer e.m.mu.Unlock()
+	return Snapshot{
 		TotalScans:   e.m.totalScans,
 		OpenPorts:    e.m.openPorts,
 		ClosedPorts:  e.m.closedPorts,
 		LastScanTime: e.m.lastScanTime,
 		ExportedAt:   time.Now().UTC(),
 	}
-	e.m.mu.Unlock()
+}
 
+// Export serialises the current metrics state as JSON into w.
+func (e *Exporter) Export(w io.Writer) error {
+	snap := e.snapshot()
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(snap)
