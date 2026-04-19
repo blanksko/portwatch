@@ -15,5 +15,7 @@
 //	}
 //
 // The Scanner respects a configurable dial timeout to avoid blocking
-// indefinitely on filtered ports.
+// indefinitely on filtered ports. Scans are performed concurrently across
+// all requested ports, with results collected and returned together once
+// all probes have completed.
 package scanner
