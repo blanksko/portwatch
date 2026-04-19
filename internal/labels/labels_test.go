@@ -49,6 +49,16 @@ func TestDelete_RemovesLabel(t *testing.T) {
 	}
 }
 
+// TestDelete_NonexistentKey ensures Delete is a no-op for keys not in the store.
+func TestDelete_NonexistentKey(t *testing.T) {
+	l := labels.New(nil)
+	// Should not panic or error.
+	l.Delete("ghost")
+	if _, ok := l.Get("ghost"); ok {
+		t.Fatal("expected no entry for never-set key")
+	}
+}
+
 func TestAll_ReturnsCopy(t *testing.T) {
 	initial := map[string]string{"a": "alpha", "b": "beta"}
 	l := labels.New(initial)
