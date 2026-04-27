@@ -35,6 +35,18 @@ func (f *Filter) Apply(results []scanner.Result) []scanner.Result {
 	return out
 }
 
+// Count returns the number of results that would pass the filter rules
+// without allocating a new slice.
+func (f *Filter) Count(results []scanner.Result) int {
+	n := 0
+	for _, r := range results {
+		if f.allow(r.Port) {
+			n++
+		}
+	}
+	return n
+}
+
 func (f *Filter) allow(port int) bool {
 	if _, excluded := f.exclude[port]; excluded {
 		return false
