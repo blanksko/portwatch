@@ -40,6 +40,12 @@ Check the current snapshot of open ports:
 portwatch scan
 ```
 
+Save a snapshot to a file for later diffing:
+
+```bash
+portwatch scan --output snapshot.json
+```
+
 ### Flags
 
 | Flag | Default | Description |
@@ -48,6 +54,7 @@ portwatch scan
 | `--ports` | `1-65535` | Port range to monitor |
 | `--alert` | `stdout` | Alert destination (`stdout`, `log`, `webhook`) |
 | `--host` | `localhost` | Target host to monitor |
+| `--output` | _(none)_ | Write scan results to a JSON file |
 
 ## Example Output
 
