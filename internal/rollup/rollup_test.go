@@ -58,6 +58,25 @@ func TestAdd_OpenThenClose_CancelsOut(t *testing.T) {
 	}
 }
 
+func TestAdd_CloseThenOpen_CancelsOut(t *testing.T) {
+	r := New(5 * time.Second)
+	r.now = fixedNow(epoch)
+	r.Add(snapshot.Diff{Closed: []int{9090}})
+
+	r.now = fixedNow(epoch.Add(1 * time.Second))
+	r.Add(snapshot.Diff{Opened: []int{9090}})
+
+	r.now = fixedNow(epoch.Add(6 * time.Second))
+	merged, ok := r.Add(snapshot.Diff{})
+	if !ok {
+		t.Fatal("expected emit")
+	}
+	if len(merged.Opened) != 0 || len(merged.Closed) != 0 {
+		t.Fatalf("expected empty diff after cancel-out, got opened=%v closed=%v",
+			merged.Opened, merged.Closed)
+	}
+}
+
 func TestFlush_ReturnsAccumulated(t *testing.T) {
 	r := New(1 * time.Minute)
 	r.now = fixedNow(epoch)
